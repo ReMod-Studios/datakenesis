@@ -1,21 +1,18 @@
 package com.remodstudios.datakenesis
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
-typealias InitFor<T> = T.() -> Unit
 
 @Serializable
 data class BlockState(
     @SerialName("variants")
-    private val _variants: MutableMap<String, @Contextual Variant> = mutableMapOf()
+    private val _variants: MutableMap<String, Variant> = mutableMapOf()
 ) {
     val variants: Map<String, Variant> by this::_variants
 
     fun variant(id: String, model: Model) { _variants[id] = model }
 
-    fun variant(id: String, model: Identifier, init: InitFor<Model>) {
+    fun variant(id: String, model: Identifier, init: InitFor<Model> = {}) {
         variant(id, Model(model).apply(init))
     }
 
@@ -28,7 +25,7 @@ data class BlockState(
     }
 
     fun stateless(model: Model) { variant("", model) }
-    fun stateless(model: Identifier, init: InitFor<Model>) { variant("", model, init) }
+    fun stateless(model: Identifier, init: InitFor<Model> = {}) { variant("", model, init) }
 }
 
-fun blockState(init: InitFor<BlockState>) = BlockState().apply(init)
+fun blockState(init: InitFor<BlockState> = {}) = BlockState().apply(init)

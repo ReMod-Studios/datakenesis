@@ -35,7 +35,7 @@ data class MultiVariant(
     val models: Set<WeightedModel> by this::_models
 
     fun model(model: WeightedModel) { _models.add(model) }
-    fun model(model: Identifier, init: InitFor<WeightedModel>) {
+    fun model(model: Identifier, init: InitFor<WeightedModel> = {}) {
         model(WeightedModel(model).apply(init))
     }
 }

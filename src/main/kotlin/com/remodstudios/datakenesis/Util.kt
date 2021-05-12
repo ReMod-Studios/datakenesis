@@ -8,13 +8,15 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+typealias InitFor<T> = T.() -> Unit
+
 @Serializable(with = IdentifierSerializer::class)
 data class Identifier(val namespace: String = "minecraft", val path: String) {
     init {
         if (!namespace.all { c -> c in '0'..'z' || c == '_' || c == '-' || c == '.' })
-            throw IllegalArgumentException("namespace contains characters outside valid characters [0-9a-z_-.]")
+            throw IllegalArgumentException("namespace ($namespace) contains characters outside valid characters [0-9a-z_-.]")
         if (!path.all { c -> c in '0'..'z' || c == '_' || c == '-' || c == '.' || c == '/' })
-            throw IllegalArgumentException("path contains characters outside valid characters [0-9a-z_-./]")
+            throw IllegalArgumentException("path ($path) contains characters outside valid characters [0-9a-z_-./]")
     }
 
     override fun toString(): String {
@@ -23,8 +25,12 @@ data class Identifier(val namespace: String = "minecraft", val path: String) {
 }
 
 fun String.asId(): Identifier {
-    val (namespace, path) = this.split(":")
-    return Identifier(namespace, path)
+    val split = this.split(":")
+    return when (split.size) {
+        1 -> Identifier(path = split[0])
+        2 -> Identifier(split[0], split[1])
+        else -> throw IllegalArgumentException("malformed identifier: $this is not a simple string nor a string in `namespace:path` form")
+    }
 }
 
 object IdentifierSerializer: KSerializer<Identifier> {

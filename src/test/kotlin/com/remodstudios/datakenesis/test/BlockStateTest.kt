@@ -34,7 +34,7 @@ class BlockStateTest: FunSpec({
     }
 })
 
-val example = blockState {
+private val example = blockState {
     stateless(Identifier(path = "haha")) {
         x = 90
         uvlock = true
