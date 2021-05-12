@@ -19,6 +19,7 @@ object VariantSerializer : JsonContentPolymorphicSerializer<Variant>(Variant::cl
 }
 
 @Serializable
+@DatakenesisDslMarker
 data class Model(
     val model: Identifier,
     var x: Int = 0,
@@ -27,6 +28,7 @@ data class Model(
 ): Variant()
 
 @Serializable(with = MultiVariantAsSetSerializer::class)
+@DatakenesisDslMarker
 data class MultiVariant(
     @SerialName("models")
     private var _models: MutableSet<WeightedModel> = mutableSetOf()
@@ -41,6 +43,7 @@ data class MultiVariant(
 }
 
 @Serializable
+@DatakenesisDslMarker
 data class WeightedModel(
     val model: Identifier,
     var x: Int = 0,

@@ -14,6 +14,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 
 @Serializable
+@DatakenesisDslMarker
 data class Multipart(
     @SerialName("multipart")
     private val _cases: MutableSet<MultipartCase> = mutableSetOf()
@@ -32,6 +33,7 @@ data class Multipart(
 fun multipart(init: InitFor<Multipart>) = Multipart().apply(init)
 
 @Serializable
+@DatakenesisDslMarker
 data class MultipartCase(
     @SerialName("when")
     private var _when: MultipartWhen? = null,
@@ -53,8 +55,10 @@ data class MultipartCase(
 }
 
 @Serializable(with = MultipartWhen.Serializer::class)
+@DatakenesisDslMarker
 sealed class MultipartWhen {
     @Serializable
+    @DatakenesisDslMarker
     data class Or(
         @SerialName("OR")
         private val _states: MutableSet<State> = mutableSetOf()
@@ -67,6 +71,7 @@ sealed class MultipartWhen {
     }
 
     @Serializable(with = State.Serializer::class)
+    @DatakenesisDslMarker
     data class State(
         private val _props: MutableMap<String, String> = mutableMapOf()
     ): MultipartWhen() {

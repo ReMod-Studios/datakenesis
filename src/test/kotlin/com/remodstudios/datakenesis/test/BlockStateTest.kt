@@ -35,20 +35,20 @@ class BlockStateTest: FunSpec({
 })
 
 private val example = blockState {
-    stateless(Identifier(path = "haha")) {
+    stateless("haha".asId()) {
         x = 90
         uvlock = true
     }
-    variant("facing=north", Identifier(path = "haha_north")) {
+    variant("facing=north", "haha_north".asId()) {
         x = 180
     }
     multiVariant("facing=south") {
-        model(Identifier(path = "haha_normal")) {
+        model("haha_normal".asId()) {
             x = 90
             y = 270
             weight = 100
         }
-        model(Identifier(path = "haha_rare")) {
+        model("haha_rare".asId()) {
             x = 90
             y = 90
             weight = 2
