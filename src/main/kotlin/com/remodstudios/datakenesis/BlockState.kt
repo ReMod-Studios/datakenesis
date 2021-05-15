@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
  *
  * Usage example:
  * ```kt
- * val example = BlockStateDef {                            // The scope where all of the functions are in effect
+ * val example = BlockState {                            // The scope where all of the functions are in effect
  *
  *     stateless("haha".asId) {                             // `stateless` is syntactic sugar for a state with no
  *                                                          // properties (having "" as key). It takes an `Identifier`,
