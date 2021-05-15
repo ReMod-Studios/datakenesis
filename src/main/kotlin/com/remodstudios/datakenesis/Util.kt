@@ -26,7 +26,7 @@ data class Identifier(val namespace: String = "minecraft", val path: String) {
         return "$namespace:$path"
     }
 
-    object Serializer: KSerializer<Identifier> {
+    internal object Serializer: KSerializer<Identifier> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Identifier", PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): Identifier {

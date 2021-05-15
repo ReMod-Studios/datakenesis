@@ -50,8 +50,8 @@ data class MultipartCase(
     interface Scope {
         fun whenState(init: InitFor<MultipartWhen.State.Scope>)
         fun whenOr(init: InitFor<MultipartWhen.Or.Scope>)
-        fun apply(model: Identifier, init: InitFor<Model> = {})
-        fun applyMultiple(init: InitFor<MultiVariant.Scope>)
+        fun apply(model: Identifier, init: InitFor<Variant.Simple> = {})
+        fun applyMultiple(init: InitFor<Variant.Multi.Scope>)
     }
 
      private inner class ScopeImpl: Scope {
@@ -61,11 +61,11 @@ data class MultipartCase(
          override fun whenOr(init: InitFor<MultipartWhen.Or.Scope>) {
             _when = MultipartWhen.Or(init)
         }
-         override fun apply(model: Identifier, init: InitFor<Model>) {
-            _apply = Model(model).apply(init)
+         override fun apply(model: Identifier, init: InitFor<Variant.Simple>) {
+            _apply = Variant.Simple(model).apply(init)
         }
-         override fun applyMultiple(init: InitFor<MultiVariant.Scope>) {
-            _apply = MultiVariant(init)
+         override fun applyMultiple(init: InitFor<Variant.Multi.Scope>) {
+            _apply = Variant.Multi(init)
         }
     }
 }
@@ -116,7 +116,7 @@ sealed class MultipartWhen {
             }
         }
 
-        object Serializer: KSerializer<State> {
+        internal object Serializer: KSerializer<State> {
             private val setSerializer = MapSerializer(String.serializer(), String.serializer())
 
             override val descriptor: SerialDescriptor = setSerializer.descriptor
@@ -132,7 +132,7 @@ sealed class MultipartWhen {
         }
     }
 
-    object Serializer : JsonContentPolymorphicSerializer<MultipartWhen>(MultipartWhen::class) {
+    internal object Serializer : JsonContentPolymorphicSerializer<MultipartWhen>(MultipartWhen::class) {
         override fun selectDeserializer(element: JsonElement) = when {
             element.jsonObject["OR"] is JsonArray -> Or.serializer()
             else -> State.serializer()
