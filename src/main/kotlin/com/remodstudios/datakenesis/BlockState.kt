@@ -52,76 +52,88 @@ import kotlinx.serialization.Serializable
  * ```
  */
 @Serializable
-@DatakenesisDslMarker
 data class BlockState(
     @SerialName("variants")
     private val _variants: MutableMap<String, Variant> = mutableMapOf()
-) {
+)
+{
+    constructor(init: InitFor<Scope>): this() { ScopeImpl().init() }
+
     /**
      * A read-only interface to get all associated variants.
      */
     val variants: Map<String, Variant> by this::_variants
 
-    /**
-     * Adds a new variant with a single model.
-     * @param state the corresponding state string
-     * @param model the model
-     */
-    fun variant(state: String, model: Model) { _variants[state] = model }
+    @DatakenesisDslMarker
+    interface Scope {
+        /**
+         * Adds a new variant with a single model.
+         * @param state the corresponding state string
+         * @param model the model
+         */
+        fun variant(state: String, model: Model)
 
-    /**
-     * Adds a new variant with a single model.
-     * @param state the corresponding state string
-     * @param model the model ID of the model
-     * @param init a block used to further modify the model (optional)
-     */
-    fun variant(state: String, model: Identifier, init: InitFor<Model> = {}) {
-        variant(state, Model(model).apply(init))
+        /**
+         * Adds a new variant with a single model.
+         * @param state the corresponding state string
+         * @param model the model ID of the model
+         * @param init a block used to further modify the model (optional)
+         */
+        fun variant(state: String, model: Identifier, init: InitFor<Model> = {}) {
+            variant(state, Model(model).apply(init))
+        }
+
+        /**
+         * Adds a new multi-variant, which chooses a model randomly from its pool.
+         * @param state the corresponding state string
+         * @param multi the multi-variant
+         */
+        fun multiVariant(state: String, multi: MultiVariant)
+
+        /**
+         * Adds a new multi-variant, which chooses a model randomly from its pool.
+         * @param state the corresponding state string
+         * @param init a block that initializes and modifies the multi-variant
+         */
+        fun multiVariant(state: String, init: InitFor<MultiVariant.Scope>) {
+            multiVariant(state, MultiVariant(init))
+        }
+
+        /**
+         * Shortcut of `variant` with an empty state string.
+         * This is useful for blocks without properties.
+         * @param model the model of the model
+         */
+        fun stateless(model: Model) { variant("", model) }
+        /**
+         * Shortcut of `variant` with an empty state string.
+         * This is useful for blocks without properties.
+         * @param model the model ID of the model
+         * @param init a block used to further modify the model (optional)
+         */
+        fun stateless(model: Identifier, init: InitFor<Model> = {}) { variant("", model, init) }
+        /**
+         * Shortcut of `multiVariant` with an empty state string.
+         * This is useful for blocks without properties.
+         * @param multi the multi-variant to use
+         */
+        fun stateless(multi: MultiVariant) { multiVariant("", multi) }
+        /**
+         * Shortcut of `multiVariant` with an empty state string.
+         * This is useful for blocks without properties.
+         * @param init a block that initializes and modifies the multi-variant
+         */
+        fun stateless(init: InitFor<MultiVariant.Scope>) { multiVariant("", init) }
     }
 
-    /**
-     * Adds a new multi-variant, which chooses a model randomly from its pool.
-     * @param state the corresponding state string
-     * @param multi the multi-variant
-     */
-    fun multiVariant(state: String, multi: MultiVariant) {
-        _variants[state] = multi
-    }
+    @DatakenesisDslMarker
+    private inner class ScopeImpl: Scope {
+        override fun variant(state: String, model: Model) {
+            _variants[state] = model
+        }
 
-    /**
-     * Adds a new multi-variant, which chooses a model randomly from its pool.
-     * @param state the corresponding state string
-     * @param init a block that initializes and modifies the multi-variant
-     */
-    fun multiVariant(state: String, init: InitFor<MultiVariant>) {
-        multiVariant(state, MultiVariant().apply(init))
+        override fun multiVariant(state: String, multi: MultiVariant) {
+            _variants[state] = multi
+        }
     }
-
-    /**
-     * Shortcut of `variant` with an empty state string.
-     * This is useful for blocks without properties.
-     * @param model the model of the model
-     */
-    fun stateless(model: Model) { variant("", model) }
-    /**
-     * Shortcut of `variant` with an empty state string.
-     * This is useful for blocks without properties.
-     * @param model the model ID of the model
-     * @param init a block used to further modify the model (optional)
-     */
-    fun stateless(model: Identifier, init: InitFor<Model> = {}) { variant("", model, init) }
-    /**
-     * Shortcut of `multiVariant` with an empty state string.
-     * This is useful for blocks without properties.
-     * @param multi the multi-variant to use
-     */
-    fun stateless(multi: MultiVariant) { multiVariant("", multi) }
-    /**
-     * Shortcut of `multiVariant` with an empty state string.
-     * This is useful for blocks without properties.
-     * @param init a block that initializes and modifies the multi-variant
-     */
-    fun stateless(init: InitFor<MultiVariant>) { multiVariant("", init) }
 }
-
-fun blockState(init: InitFor<BlockState> = {}) = BlockState().apply(init)

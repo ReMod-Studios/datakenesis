@@ -21,16 +21,21 @@ data class Multipart(
 ) {
     val cases: Set<MultipartCase> by this::_cases
 
-    fun case(case: MultipartCase) {
-        _cases.add(case)
-    }
-    fun case(init: InitFor<MultipartCase>) {
-        case(MultipartCase().apply(init))
+    constructor(init: InitFor<Scope>) : this() { ScopeImpl().init() }
+
+    interface Scope {
+        fun case(case: MultipartCase)
+        fun case(init: InitFor<MultipartCase.Scope>) {
+            case(MultipartCase(init))
+        }
     }
 
+    private inner class ScopeImpl: Scope {
+        override fun case(case: MultipartCase) {
+            _cases.add(case)
+        }
+    }
 }
-
-fun multipart(init: InitFor<Multipart>) = Multipart().apply(init)
 
 @Serializable
 @DatakenesisDslMarker
@@ -40,17 +45,28 @@ data class MultipartCase(
     @SerialName("apply")
     private var _apply: Variant? = null,
 ) {
-    fun whenState(init: InitFor<MultipartWhen.State>) {
-        _when = MultipartWhen.State().apply(init)
+    constructor(init: InitFor<Scope>) : this() { ScopeImpl().init() }
+
+    interface Scope {
+        fun whenState(init: InitFor<MultipartWhen.State.Scope>)
+        fun whenOr(init: InitFor<MultipartWhen.Or.Scope>)
+        fun apply(model: Identifier, init: InitFor<Model> = {})
+        fun applyMultiple(init: InitFor<MultiVariant.Scope>)
     }
-    fun whenOr(init: InitFor<MultipartWhen.Or>) {
-        _when = MultipartWhen.Or().apply(init)
-    }
-    fun apply(model: Identifier, init: InitFor<Model> = {}) {
-        _apply = Model(model).apply(init)
-    }
-    fun applyMultiple(init: InitFor<MultiVariant>) {
-        _apply = MultiVariant().apply(init)
+
+     private inner class ScopeImpl: Scope {
+        override fun whenState(init: InitFor<MultipartWhen.State.Scope>) {
+            _when = MultipartWhen.State(init)
+        }
+         override fun whenOr(init: InitFor<MultipartWhen.Or.Scope>) {
+            _when = MultipartWhen.Or(init)
+        }
+         override fun apply(model: Identifier, init: InitFor<Model>) {
+            _apply = Model(model).apply(init)
+        }
+         override fun applyMultiple(init: InitFor<MultiVariant.Scope>) {
+            _apply = MultiVariant(init)
+        }
     }
 }
 
@@ -65,8 +81,16 @@ sealed class MultipartWhen {
     ): MultipartWhen() {
         val states: Set<State> by this::_states
 
-        fun state(init: InitFor<State>) {
-            _states.add(State().apply(init))
+        constructor(init: InitFor<Scope>) : this() { ScopeImpl().init() }
+
+        interface Scope {
+            fun state(init: InitFor<State.Scope>)
+        }
+
+        private inner class ScopeImpl: Scope {
+            override fun state(init: InitFor<State.Scope>) {
+                _states.add(State(init))
+            }
         }
     }
 
@@ -77,11 +101,19 @@ sealed class MultipartWhen {
     ): MultipartWhen() {
         val props: Map<String, String> by this::_props
 
-        infix fun String.isValue(other: String) {
-            _props[this] = other
+        constructor(init: InitFor<Scope>) : this() { ScopeImpl().init() }
+
+        interface Scope {
+            infix fun String.isValue(other: String)
+            infix fun String.isAnyIn(others: Collection<String>) {
+                this isValue others.joinToString("|")
+            }
         }
-        infix fun String.isAnyIn(others: Collection<String>) {
-            _props[this] = others.joinToString("|")
+
+        private inner class ScopeImpl: Scope {
+            override infix fun String.isValue(other: String) {
+                _props[this] = other
+            }
         }
 
         object Serializer: KSerializer<State> {
