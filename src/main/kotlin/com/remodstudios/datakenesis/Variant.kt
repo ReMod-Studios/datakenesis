@@ -8,7 +8,7 @@ import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 
-@Serializable(with = Variant.Serializer::class)
+@Serializable(with = VariantSerializer::class)
 sealed interface Variant {
 
     @Serializable
@@ -59,12 +59,12 @@ sealed interface Variant {
                              val y: Int = 0,
                              val uvlock: Boolean = false,
                              val weight: Int = 1)
+}
 
-    object Serializer : JsonContentPolymorphicSerializer<Variant>(Variant::class) {
-        override fun selectDeserializer(element: JsonElement) = when {
-            element.jsonObject["models"] is JsonArray -> Multi.serializer()
-            else -> Simple.serializer()
-        }
+private object VariantSerializer : JsonContentPolymorphicSerializer<Variant>(Variant::class) {
+    override fun selectDeserializer(element: JsonElement) = when {
+        element.jsonObject["models"] is JsonArray -> Variant.Multi.serializer()
+        else -> Variant.Simple.serializer()
     }
 }
 
