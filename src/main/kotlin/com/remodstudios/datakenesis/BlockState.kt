@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class BlockState(val variants: Map<String, Variant>)
 
+@DatakenesisDslMarker
 class BlockStateBuilder {
     val variants: MutableMap<String, Variant> = mutableMapOf()
 

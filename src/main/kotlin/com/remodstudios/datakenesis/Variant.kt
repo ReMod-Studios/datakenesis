@@ -36,6 +36,7 @@ sealed interface Variant {
         }
     }
 
+    @DatakenesisDslMarker
     class MultiBuilder {
         val models: MutableSet<WeightedModel> = mutableSetOf()
 
