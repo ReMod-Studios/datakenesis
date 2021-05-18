@@ -52,7 +52,7 @@ private val json = Json {
 private val example = blockState {
     stateless(model = "haha".asId, x = 90, uvlock = true)
     variant("facing=north", model = "haha_north".asId, x = 180)
-    multiVariant("facing=south") {
+    variant("facing=south") {
         add(model = "haha_normal".asId, x = 90, y = 270, weight = 100)
         add(model = "haha_rare".asId, x = 90, y = 90, weight = 2)
     }

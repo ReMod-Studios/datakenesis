@@ -1,12 +1,6 @@
 package com.remodstudios.datakenesis
 
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.SetSerializer
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
-import kotlinx.serialization.json.*
 
 @Serializable(with = VariantSerializer::class)
 sealed interface Variant {
@@ -18,29 +12,14 @@ sealed interface Variant {
                       val y: Int = 0,
                       val uvlock: Boolean = false): Variant
 
-    @Serializable(with = Multi.AsSetSerializer::class)
-    data class Multi(val models: Set<WeightedModel> = mutableSetOf()): Variant {
-        internal object AsSetSerializer: KSerializer<Multi> {
-            private val setSerializer = SetSerializer(WeightedModel.serializer())
-
-            override val descriptor: SerialDescriptor = setSerializer.descriptor
-
-            override fun deserialize(decoder: Decoder): Multi {
-                val set = setSerializer.deserialize(decoder)
-                return Multi(set.toMutableSet())
-            }
-
-            override fun serialize(encoder: Encoder, value: Multi) {
-                setSerializer.serialize(encoder, value.models)
-            }
-        }
-    }
+    @Serializable(with = VariantMultiAsSetSerializer::class)
+    data class Multi(val models: Set<WeightedModel>): Variant
 
     @DatakenesisDslMarker
     class MultiBuilder {
         val models: MutableSet<WeightedModel> = mutableSetOf()
 
-        fun build() = Multi(models.toSet())
+        fun build() = Multi(models)
 
         fun add(model: WeightedModel) { models.add(model) }
         fun add(model: Identifier,
@@ -61,10 +40,4 @@ sealed interface Variant {
                              val weight: Int = 1)
 }
 
-private object VariantSerializer : JsonContentPolymorphicSerializer<Variant>(Variant::class) {
-    override fun selectDeserializer(element: JsonElement) = when {
-        element.jsonObject["models"] is JsonArray -> Variant.Multi.serializer()
-        else -> Variant.Simple.serializer()
-    }
-}
 

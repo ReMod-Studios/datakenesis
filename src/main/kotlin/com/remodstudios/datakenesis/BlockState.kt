@@ -10,10 +10,10 @@ import kotlinx.serialization.Serializable
 data class BlockState(val variants: Map<String, Variant>)
 
 @DatakenesisDslMarker
-class BlockStateBuilder {
+class BlockStateBuilder: Builder<BlockState> {
     val variants: MutableMap<String, Variant> = mutableMapOf()
 
-    fun build() = BlockState(variants.toMap())
+    override fun build() = BlockState(variants)
 
     /**
      * Adds a new variant.
@@ -41,7 +41,7 @@ class BlockStateBuilder {
      * @param state the corresponding state string
      * @param init a block that initializes and modifies the multi-variant
      */
-    inline fun multiVariant(state: String, init: InitFor<Variant.MultiBuilder>) {
+    inline fun variant(state: String, init: InitFor<Variant.MultiBuilder>) {
         variant(state, Variant.MultiBuilder().apply(init).build())
     }
 
@@ -68,9 +68,9 @@ class BlockStateBuilder {
      * This is useful for blocks without properties.
      * @param init a block that initializes and modifies the multi-variant
      */
-    inline fun statelessMulti(init: InitFor<Variant.MultiBuilder>) {
+    inline fun stateless(init: InitFor<Variant.MultiBuilder>) {
         variants[""] = Variant.MultiBuilder().apply(init).build()
     }
 }
 
-fun blockState(init: InitFor<BlockStateBuilder>) = BlockStateBuilder().apply(init).build()
+inline fun blockState(init: InitFor<BlockStateBuilder>) = BlockStateBuilder().apply(init).build()

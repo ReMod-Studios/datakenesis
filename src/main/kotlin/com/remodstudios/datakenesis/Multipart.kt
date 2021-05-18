@@ -1,17 +1,7 @@
 package com.remodstudios.datakenesis
 
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonContentPolymorphicSerializer
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonObject
 
 @Serializable
 @DatakenesisDslMarker
@@ -20,14 +10,13 @@ data class Multipart(
     val cases: Set<MultipartCase>
 )
 
-fun multipart(init: InitFor<MultipartBuilder>) = MultipartBuilder().apply(init).build()
-
+inline fun multipart(init: InitFor<MultipartBuilder>) = MultipartBuilder().apply(init).build()
 
 @DatakenesisDslMarker
-class MultipartBuilder {
+class MultipartBuilder: Builder<Multipart> {
     val cases: MutableSet<MultipartCase> = mutableSetOf()
 
-    fun build() = Multipart(cases.toSet())
+    override fun build() = Multipart(cases)
 
     fun case(case: MultipartCase) { cases.add(case) }
 
@@ -44,11 +33,11 @@ data class MultipartCase(
 )
 
 @DatakenesisDslMarker
-class MultipartCaseBuilder {
+class MultipartCaseBuilder: Builder<MultipartCase> {
     var whenCriteria: MultipartWhen? = null
     var apply: Variant? = null
 
-    fun build() = MultipartCase(
+    override fun build() = MultipartCase(
         whenCriteria,
         apply ?: throw IllegalStateException("`apply` not specified")
     )
@@ -65,7 +54,7 @@ class MultipartCaseBuilder {
               uvlock: Boolean = false) {
         apply = Variant.Simple(model, x, y, uvlock)
     }
-    inline fun applyMulti(init: InitFor<Variant.MultiBuilder>) {
+    inline fun apply(init: InitFor<Variant.MultiBuilder>) {
         apply = Variant.MultiBuilder().apply(init).build()
     }
 }
@@ -82,47 +71,25 @@ sealed interface MultipartWhen {
     class OrBuilder(
         val states: MutableSet<State> = mutableSetOf()
     ): MultipartWhen, MutableSet<State> by states {
-        fun build() = Or(states.toSet())
+        fun build() = Or(states)
 
         inline fun add(init: InitFor<StateBuilder>) {
             states.add(StateBuilder().apply(init).build())
         }
     }
 
-    @Serializable(with = State.Serializer::class)
-    data class State(val states: Map<String, String>): MultipartWhen {
-        internal object Serializer: KSerializer<State> {
-            private val mapSerializer = MapSerializer(String.serializer(), String.serializer())
-
-            override val descriptor: SerialDescriptor = mapSerializer.descriptor
-
-            override fun deserialize(decoder: Decoder): State {
-                val map = mapSerializer.deserialize(decoder)
-                return State(map.toMutableMap())
-            }
-
-            override fun serialize(encoder: Encoder, value: State) {
-                mapSerializer.serialize(encoder, value.states)
-            }
-        }
-    }
+    @Serializable(with = MultipartWhenStateSerializer::class)
+    data class State(val states: Map<String, String>): MultipartWhen
 
     @DatakenesisDslMarker
-    class StateBuilder {
+    class StateBuilder: Builder<State> {
         val props: MutableMap<String, String> = mutableMapOf()
 
-        fun build() = State(props.toMap())
+        override fun build() = State(props)
 
         fun expect(prop: String, vararg states: String) {
             props[prop] = states.joinToString("|")
         }
-    }
-}
-
-private object MultipartWhenSerializer : JsonContentPolymorphicSerializer<MultipartWhen>(MultipartWhen::class) {
-    override fun selectDeserializer(element: JsonElement) = when {
-        element.jsonObject["OR"] is JsonArray -> MultipartWhen.Or.serializer()
-        else -> MultipartWhen.State.serializer()
     }
 }
 
