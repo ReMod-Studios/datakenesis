@@ -9,39 +9,17 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 
 @Serializable(with = Variant.Serializer::class)
-sealed class Variant {
+sealed interface Variant {
 
     @Serializable
     @DatakenesisDslMarker
-    data class Simple(
-        val model: Identifier,
-        var x: Int = 0,
-        var y: Int = 0,
-        var uvlock: Boolean = false,
-    ): Variant()
+    data class Simple(val model: Identifier,
+                      val x: Int = 0,
+                      val y: Int = 0,
+                      val uvlock: Boolean = false): Variant
 
     @Serializable(with = Multi.AsSetSerializer::class)
-    data class Multi(
-        @SerialName("models")
-        private var _models: MutableSet<WeightedModel> = mutableSetOf()
-    ): Variant() {
-        constructor(init: InitFor<Scope>) : this() { ScopeImpl().init() }
-
-        val models: Set<WeightedModel> by this::_models
-
-        @DatakenesisDslMarker
-        interface Scope {
-            fun model(model: WeightedModel)
-            fun model(model: Identifier, init: InitFor<WeightedModel> = {}) {
-                model(WeightedModel(model).apply(init))
-            }
-        }
-
-        @DatakenesisDslMarker
-        private inner class ScopeImpl: Scope {
-            override fun model(model: WeightedModel) { _models.add(model) }
-        }
-
+    data class Multi(val models: Set<WeightedModel> = mutableSetOf()): Variant {
         internal object AsSetSerializer: KSerializer<Multi> {
             private val setSerializer = SetSerializer(WeightedModel.serializer())
 
@@ -58,21 +36,34 @@ sealed class Variant {
         }
     }
 
-    internal object Serializer : JsonContentPolymorphicSerializer<Variant>(Variant::class) {
-        override fun selectDeserializer(element: JsonElement) = when {
-            element.jsonObject["models"] is JsonArray -> Multi.serializer()
-            else -> Simple.serializer()
+    class MultiBuilder {
+        val models: MutableSet<WeightedModel> = mutableSetOf()
+
+        fun build() = Multi(models.toSet())
+
+        fun add(model: WeightedModel) { models.add(model) }
+        fun add(model: Identifier,
+                x: Int = 0,
+                y: Int = 0,
+                uvlock: Boolean = false,
+                weight: Int = 1) {
+            models.add(WeightedModel(model, x, y, uvlock, weight))
         }
     }
 
     @Serializable
     @DatakenesisDslMarker
-    data class WeightedModel(
-        val model: Identifier,
-        var x: Int = 0,
-        var y: Int = 0,
-        var uvlock: Boolean = false,
-        var weight: Int = 1
-    )
+    data class WeightedModel(val model: Identifier,
+                             val x: Int = 0,
+                             val y: Int = 0,
+                             val uvlock: Boolean = false,
+                             val weight: Int = 1)
+
+    object Serializer : JsonContentPolymorphicSerializer<Variant>(Variant::class) {
+        override fun selectDeserializer(element: JsonElement) = when {
+            element.jsonObject["models"] is JsonArray -> Multi.serializer()
+            else -> Simple.serializer()
+        }
+    }
 }
 

@@ -49,24 +49,11 @@ private val json = Json {
     prettyPrint = true
 }
 
-private val example = BlockState {
-    stateless("haha".asId) {
-        x = 90
-        uvlock = true
-    }
-    variant("facing=north", "haha_north".asId) {
-        x = 180
-    }
+private val example = blockState {
+    stateless(model = "haha".asId, x = 90, uvlock = true)
+    variant("facing=north", model = "haha".asId, x = 90, uvlock = true)
     multiVariant("facing=south") {
-        model("haha_normal".asId) {
-            x = 90
-            y = 270
-            weight = 100
-        }
-        model("haha_rare".asId) {
-            x = 90
-            y = 90
-            weight = 2
-        }
+        add(model = "haha_normal".asId, x = 90, y = 270, weight = 100)
+        add(model = "haha_rare".asId, x = 90, y = 90, weight = 2)
     }
 }
