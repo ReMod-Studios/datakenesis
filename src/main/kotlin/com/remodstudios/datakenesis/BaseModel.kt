@@ -4,26 +4,23 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Model(
-    val parent: Identifier? = null,
-    @SerialName("ambientocclusion")
-    val ambientOcclusion: Boolean = true,
-    val display: Map<Position, ModelDisplay>,
-    val textures: Map<String, ModelTexture>,
-    val elements: List<ModelElement>,
-)
+abstract class BaseModel {
+    abstract val parent: Identifier?
 
-inline fun model(init: InitFor<ModelBuilder>) = ModelBuilder().apply(init).build()
+    @SerialName("ambientocclusion")
+    abstract val ambientOcclusion: Boolean
+    abstract val display: Map<Position, ModelDisplay>
+    abstract val textures: Map<String, ModelTexture>
+    abstract val elements: List<ModelElement>
+}
 
 @DatakenesisDslMarker
-class ModelBuilder: Builder<Model> {
+abstract class BaseModelBuilder<T: BaseModel>: Builder<T> {
     var parent: Identifier? = null
     var ambientOcclusion: Boolean = true
     val display: MutableMap<Position, ModelDisplay> = mutableMapOf()
     val textures: MutableMap<String, ModelTexture> = mutableMapOf()
     val elements: MutableList<ModelElement> = mutableListOf()
-
-    override fun build() = Model(parent, ambientOcclusion, display, textures, elements)
 
     fun displays(init: InitFor<DisplaysScope>) { DisplaysScope().init() }
     fun textures(init: InitFor<TexturesScope>) { TexturesScope().init() }
@@ -35,22 +32,20 @@ class ModelBuilder: Builder<Model> {
         operator fun Position.invoke(rotation: Vec3f = Vec3f(0f, 0f, 0f),
                                      translation: Vec3f = Vec3f(0f, 0f, 0f),
                                      scale: Vec3f = Vec3f(1f, 1f, 1f)) {
-            this@ModelBuilder.display[this] = ModelDisplay(rotation, translation, scale)
+            this@BaseModelBuilder.display[this] = ModelDisplay(rotation, translation, scale)
         }
     }
 
     @DatakenesisDslMarker
     inner class TexturesScope {
-
-        operator fun String.invoke(texture: ModelTexture) { this@ModelBuilder.textures[this] = texture }
-        operator fun String.invoke(tex: Identifier) { this@ModelBuilder.textures[this] = ModelTexture.Var(tex) }
-        operator fun String.invoke(ref: String) { this@ModelBuilder.textures[this] = ModelTexture.Ref(ref) }
+        operator fun String.invoke(texture: ModelTexture) { this@BaseModelBuilder.textures[this] = texture }
+        operator fun String.invoke(tex: Identifier) { this@BaseModelBuilder.textures[this] = ModelTexture.Var(tex) }
+        operator fun String.invoke(ref: String) { this@BaseModelBuilder.textures[this] = ModelTexture.Ref(ref) }
     }
 
     @DatakenesisDslMarker
     inner class ElementsScope {
-
-        val elements: MutableList<ModelElement> = this@ModelBuilder.elements
+        val elements: MutableList<ModelElement> = this@BaseModelBuilder.elements
 
         fun add(element: ModelElement) { elements.add(element) }
         inline fun add(from: Vec3f, to: Vec3f, init: InitFor<ModelElementBuilder>) {

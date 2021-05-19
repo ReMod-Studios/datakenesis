@@ -121,7 +121,7 @@ private val json = Json {
     prettyPrint = true
 }
 
-private val example = model {
+private val example = blockModel {
     // this will end up getting ignored. eh, whatever
     parent = "minecraft:block/cube_all".asId
 
