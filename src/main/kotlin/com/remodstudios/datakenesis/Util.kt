@@ -108,3 +108,9 @@ enum class Position {
     @SerialName("ground") GROUND,
     @SerialName("fixed") FIXED,
 }
+
+@Serializable
+enum class GuiLight {
+    @SerialName("front") FRONT,
+    @SerialName("side") SIDE,
+}

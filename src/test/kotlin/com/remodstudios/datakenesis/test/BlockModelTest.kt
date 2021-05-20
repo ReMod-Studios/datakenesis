@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class ModelTest: FunSpec({
+class BlockModelTest: FunSpec({
     context("JSON output") {
         test("if it outputs expected JSON") {
             val output = json.encodeToString(example)

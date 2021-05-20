@@ -5,55 +5,57 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 abstract class BaseModel {
-    abstract val parent: Identifier?
+    open val parent: Identifier? = null
 
     @SerialName("ambientocclusion")
-    abstract val ambientOcclusion: Boolean
-    abstract val display: Map<Position, ModelDisplay>
-    abstract val textures: Map<String, ModelTexture>
-    abstract val elements: List<ModelElement>
-}
+    open val ambientOcclusion: Boolean = true
 
-@DatakenesisDslMarker
-abstract class BaseModelBuilder<T: BaseModel>: Builder<T> {
-    var parent: Identifier? = null
-    var ambientOcclusion: Boolean = true
-    val display: MutableMap<Position, ModelDisplay> = mutableMapOf()
-    val textures: MutableMap<String, ModelTexture> = mutableMapOf()
-    val elements: MutableList<ModelElement> = mutableListOf()
+    // haha nice boilerplate
+    @SerialName("display")
+    protected open val _display: MutableMap<Position, ModelDisplay> = mutableMapOf()
+    val display: Map<Position, ModelDisplay> get() = _display
 
-    fun displays(init: InitFor<DisplaysScope>) { DisplaysScope().init() }
-    fun textures(init: InitFor<TexturesScope>) { TexturesScope().init() }
-    fun elements(init: InitFor<ElementsScope>) { ElementsScope().init() }
+    @SerialName("textures")
+    protected open val _textures: MutableMap<String, ModelTexture> = mutableMapOf()
+    val textures: Map<String, ModelTexture> get() = _textures
 
+    @SerialName("elements")
+    protected open val _elements: MutableList<ModelElement> = mutableListOf()
+    val elements: List<ModelElement> get() = _elements
+
+    fun displays(init: InitFor<DisplaysScope>) { DisplaysScope(_display).init() }
+    fun textures(init: InitFor<TexturesScope>) { TexturesScope(_textures).init() }
+    fun elements(init: InitFor<ElementsScope>) { ElementsScope(_elements).init() }
 
     @DatakenesisDslMarker
-    inner class DisplaysScope {
+    @JvmInline
+    value class DisplaysScope(val display: MutableMap<Position, ModelDisplay>) {
         operator fun Position.invoke(rotation: Vec3f = Vec3f(0f, 0f, 0f),
                                      translation: Vec3f = Vec3f(0f, 0f, 0f),
                                      scale: Vec3f = Vec3f(1f, 1f, 1f)) {
-            this@BaseModelBuilder.display[this] = ModelDisplay(rotation, translation, scale)
+            display[this] = ModelDisplay(rotation, translation, scale)
+            
         }
     }
 
     @DatakenesisDslMarker
-    inner class TexturesScope {
-        operator fun String.invoke(texture: ModelTexture) { this@BaseModelBuilder.textures[this] = texture }
-        operator fun String.invoke(tex: Identifier) { this@BaseModelBuilder.textures[this] = ModelTexture.Var(tex) }
-        operator fun String.invoke(ref: String) { this@BaseModelBuilder.textures[this] = ModelTexture.Ref(ref) }
+    @JvmInline
+    value class TexturesScope(val textures: MutableMap<String, ModelTexture>) {
+        operator fun String.invoke(texture: ModelTexture) { textures[this] = texture }
+        operator fun String.invoke(tex: Identifier) { textures[this] = ModelTexture.Var(tex) }
+        operator fun String.invoke(ref: String) { textures[this] = ModelTexture.Ref(ref) }
     }
 
     @DatakenesisDslMarker
-    inner class ElementsScope {
-        val elements: MutableList<ModelElement> = this@BaseModelBuilder.elements
-
+    @JvmInline
+    value class ElementsScope(val elements: MutableList<ModelElement>) {
         fun add(element: ModelElement) { elements.add(element) }
         inline fun add(from: Vec3f, to: Vec3f, init: InitFor<ModelElementBuilder>) {
             elements.add(ModelElementBuilder(from, to).apply(init).build())
         }
         inline fun add(x1: Float, y1: Float, z1: Float,
-                x2: Float, y2: Float, z2: Float,
-                init: InitFor<ModelElementBuilder>) {
+                       x2: Float, y2: Float, z2: Float,
+                       init: InitFor<ModelElementBuilder>) {
             elements.add(ModelElementBuilder(Vec3f(x1, y1, z1), Vec3f(x2, y2, z2)).apply(init).build())
         }
     }
