@@ -1,4 +1,4 @@
-package com.remodstudios.datakenesis
+package io.github.remodstudios.datakenesis.struct
 
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
@@ -12,6 +12,27 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
+
+class DiscriminatorChanger<T : Any>(
+    private val tSerializer: KSerializer<T>,
+    private val discriminator: String
+) : KSerializer<T> {
+    override val descriptor: SerialDescriptor get() = tSerializer.descriptor
+
+    override fun serialize(encoder: Encoder, value: T) {
+        require(encoder is JsonEncoder)
+        val json = Json(encoder.json) { classDiscriminator = discriminator }
+        val element = json.encodeToJsonElement(tSerializer, value)
+        encoder.encodeJsonElement(element)
+    }
+
+    override fun deserialize(decoder: Decoder): T {
+        require(decoder is JsonDecoder)
+        val element = decoder.decodeJsonElement()
+        val json = Json(decoder.json) { classDiscriminator = discriminator }
+        return json.decodeFromJsonElement(tSerializer, element)
+    }
+}
 
 internal object UvSerializer: KSerializer<ModelElement.Uv> {
     private val surrogateSerializer = ListSerializer(Float.serializer())
@@ -99,5 +120,62 @@ internal object VariantMultiAsSetSerializer: KSerializer<Variant.Multi> {
 
     override fun serialize(encoder: Encoder, value: Variant.Multi) {
         setSerializer.serialize(encoder, value.models)
+    }
+}
+
+internal object Vec3fSerializer: KSerializer<Vec3f> {
+    private val surrogateSerializer = ListSerializer(Float.serializer())
+
+    override val descriptor: SerialDescriptor = surrogateSerializer.descriptor
+
+    override fun deserialize(decoder: Decoder): Vec3f {
+        val list = decoder.decodeSerializableValue(surrogateSerializer)
+        if (list.size != 3)
+            throw IllegalStateException("expected exactly 3 floats in a Vec3f, found ${list.size}: $list")
+        return Vec3f(list[0], list[1], list[2])
+    }
+
+    override fun serialize(encoder: Encoder, value: Vec3f) {
+        encoder.encodeSerializableValue(surrogateSerializer, listOf(value.x, value.y, value.z))
+    }
+}
+
+internal object IdentifierSerializer: KSerializer<Identifier> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Identifier", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): Identifier {
+        return decoder.decodeString().asId
+    }
+
+    override fun serialize(encoder: Encoder, value: Identifier) {
+        encoder.encodeString(value.toString())
+    }
+}
+
+internal object SlotsSerializer : JsonTransformingSerializer<List<Slot>>(
+    ListSerializer(Slot.serializer())
+) {
+    // If response is not an array, then it is a single object that should be wrapped into the array
+    override fun transformDeserialize(element: JsonElement): JsonElement =
+        if (element !is JsonArray) JsonArray(listOf(element)) else element
+}
+
+internal object ItemModifierSerializer : KSerializer<ItemModifierInner> by DiscriminatorChanger(
+    ItemModifierInner.serializer(), "function"
+)
+
+internal object NPIntSerializer : JsonContentPolymorphicSerializer<NumberProviderInt>(NumberProviderInt::class) {
+    override fun selectDeserializer(element: JsonElement) = when (element) {
+        is JsonPrimitive -> NumberProviderInt.Constant.serializer()
+        is JsonArray -> NumberProviderInt.Range.serializer()
+        else -> throw IllegalStateException("unrecognized number provider type")
+    }
+}
+
+internal object NPFloatSerializer : JsonContentPolymorphicSerializer<NumberProviderFloat>(NumberProviderFloat::class) {
+    override fun selectDeserializer(element: JsonElement) = when (element) {
+        is JsonPrimitive -> NumberProviderFloat.Constant.serializer()
+        is JsonArray -> NumberProviderFloat.Range.serializer()
+        else -> throw IllegalStateException("unrecognized number provider type")
     }
 }

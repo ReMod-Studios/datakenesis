@@ -1,6 +1,7 @@
-package com.remodstudios.datakenesis.test
+package io.github.remodstudios.datakenesis.test
 
-import com.remodstudios.datakenesis.*
+import io.github.remodstudios.datakenesis.struct.asId
+import io.github.remodstudios.datakenesis.struct.multipart
 import io.kotest.core.spec.style.FunSpec
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

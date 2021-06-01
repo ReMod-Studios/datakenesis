@@ -1,6 +1,7 @@
-package com.remodstudios.datakenesis.test
+package io.github.remodstudios.datakenesis.test
 
-import com.remodstudios.datakenesis.*
+import io.github.remodstudios.datakenesis.struct.asId
+import io.github.remodstudios.datakenesis.struct.blockState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString

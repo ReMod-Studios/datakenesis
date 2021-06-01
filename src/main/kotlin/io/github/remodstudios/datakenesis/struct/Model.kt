@@ -1,4 +1,4 @@
-package com.remodstudios.datakenesis
+package io.github.remodstudios.datakenesis.struct
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -34,7 +34,8 @@ class ModelBuilder: Builder<Model> {
     inner class DisplaysScope {
         operator fun Position.invoke(rotation: Vec3f = Vec3f(0f, 0f, 0f),
                                      translation: Vec3f = Vec3f(0f, 0f, 0f),
-                                     scale: Vec3f = Vec3f(1f, 1f, 1f)) {
+                                     scale: Vec3f = Vec3f(1f, 1f, 1f)
+        ) {
             this@ModelBuilder.display[this] = ModelDisplay(rotation, translation, scale)
         }
     }
@@ -43,8 +44,10 @@ class ModelBuilder: Builder<Model> {
     inner class TexturesScope {
 
         operator fun String.invoke(texture: ModelTexture) { this@ModelBuilder.textures[this] = texture }
-        operator fun String.invoke(tex: Identifier) { this@ModelBuilder.textures[this] = ModelTexture.Var(tex) }
-        operator fun String.invoke(ref: String) { this@ModelBuilder.textures[this] = ModelTexture.Ref(ref) }
+        operator fun String.invoke(tex: Identifier) { this@ModelBuilder.textures[this] = ModelTexture.Var(tex)
+        }
+        operator fun String.invoke(ref: String) { this@ModelBuilder.textures[this] = ModelTexture.Ref(ref)
+        }
     }
 
     @DatakenesisDslMarker
@@ -58,7 +61,8 @@ class ModelBuilder: Builder<Model> {
         }
         inline fun add(x1: Float, y1: Float, z1: Float,
                 x2: Float, y2: Float, z2: Float,
-                init: InitFor<ModelElementBuilder>) {
+                init: InitFor<ModelElementBuilder>
+        ) {
             elements.add(ModelElementBuilder(Vec3f(x1, y1, z1), Vec3f(x2, y2, z2)).apply(init).build())
         }
     }

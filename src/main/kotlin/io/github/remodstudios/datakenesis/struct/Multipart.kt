@@ -1,4 +1,4 @@
-package com.remodstudios.datakenesis
+package io.github.remodstudios.datakenesis.struct
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
