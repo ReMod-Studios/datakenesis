@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.5.0"
     kotlin("plugin.serialization") version "1.5.0"
+    id("io.github.remodstudios.datakenesis.plugin.greeting")
 }
 
 group = "com.remodstudios"
