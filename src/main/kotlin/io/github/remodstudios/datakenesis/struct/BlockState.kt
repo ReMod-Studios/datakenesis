@@ -1,5 +1,9 @@
 package io.github.remodstudios.datakenesis.struct
 
+import io.github.remodstudios.datakenesis.Builder
+import io.github.remodstudios.datakenesis.DatakenesisDslMarker
+import io.github.remodstudios.datakenesis.Identifier
+import io.github.remodstudios.datakenesis.InitFor
 import kotlinx.serialization.Serializable
 
 /**

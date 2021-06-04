@@ -23,16 +23,12 @@ class DatakenesisPlugin: Plugin<Project> {
             val mainSrcSet = sourceSets.getByName("main")
 
             val kotlinc = configurations.register("kotlinc")
-            val scriptsImplementation = configurations.register("scriptsImplementation") {
-                it.extendsFrom(configurations.getByName("implementation"))
-            }
-            with(configurations) {
-                getByName("compileClasspath").extendsFrom(scriptsImplementation.get())
-                getByName("runtimeClasspath").extendsFrom(scriptsImplementation.get())
+            val scripts = configurations.register("scripts") {
+                it.extendsFrom(configurations.getByName("runtimeClasspath"))
             }
 
             val scriptsDir = "src/scripts/kotlin"
-            sourceSets.register("scripts") {
+            val scriptsSrcSet = sourceSets.register("scripts") {
                 it.java.srcDir(scriptsDir)
             }
 
@@ -42,7 +38,6 @@ class DatakenesisPlugin: Plugin<Project> {
                 jcenter() // press F to pay respects for JCenter
             }
 
-            dependencies.addScriptDependencies()
             with(dependencies) {
                 add("kotlinc", kotlinModule("stdlib"))
                 add("kotlinc", kotlinModule("reflect"))
@@ -50,8 +45,11 @@ class DatakenesisPlugin: Plugin<Project> {
                 add("kotlinc", kotlinModule("script-runtime"))
                 add("kotlinc", kotlinModule("scripting-compiler-embeddable"))
 
-                add("scriptsImplementation", kotlinModule("stdlib"))
-                add("scriptsImplementation", mainSrcSet.output)
+                // to make IDEA happy. totally not going to use it though
+                add("implementation", kotlinModule("script-runtime"))
+
+                add("scripts", kotlinModule("stdlib"))
+                add("scripts", mainSrcSet.output.classesDirs)
             }
 
             tasks {
@@ -67,14 +65,14 @@ class DatakenesisPlugin: Plugin<Project> {
                 }
                 register<JavaExec>("datakenesis") { task ->
                     task.dependsOn(prepareKotlinHome)
+                    task.dependsOn(getByName("compileJava"))
                     task.main = "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler"
                     task.classpath = kotlinc.get()
 
-                    println("hello = ${configurations.getByName("runtimeClasspath").asPath}")
-
                     task.args(
                         "-kotlin-home", kotlinHome,
-                        "-classpath", configurations.getByName("runtimeClasspath").asPath,
+                        //"-classpath", configurations.getByName("runtimeClasspath").asPath,
+                        "-classpath", scripts.get().asPath,
                         "-script", "$rootDir/$scriptsDir/datakenesis.kts"
                     )
                 }
@@ -82,8 +80,5 @@ class DatakenesisPlugin: Plugin<Project> {
 
 
         }
-    }
-
-    private fun DependencyHandler.addScriptDependencies() {
     }
 }

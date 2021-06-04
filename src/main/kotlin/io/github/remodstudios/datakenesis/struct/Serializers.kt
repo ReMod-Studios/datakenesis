@@ -1,5 +1,8 @@
 package io.github.remodstudios.datakenesis.struct
 
+import io.github.remodstudios.datakenesis.Identifier
+import io.github.remodstudios.datakenesis.Vec3f
+import io.github.remodstudios.datakenesis.asId
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer

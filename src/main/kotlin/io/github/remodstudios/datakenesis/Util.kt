@@ -1,5 +1,7 @@
-package io.github.remodstudios.datakenesis.struct
+package io.github.remodstudios.datakenesis
 
+import io.github.remodstudios.datakenesis.struct.IdentifierSerializer
+import io.github.remodstudios.datakenesis.struct.Vec3fSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -36,8 +38,6 @@ data class Identifier(val namespace: String = "minecraft", val path: String) {
 
     fun newAffixed(prefix: String = "", suffix: String = "")
         = Identifier(namespace, "$prefix$path$suffix")
-
-
 }
 
 val String.asId: Identifier

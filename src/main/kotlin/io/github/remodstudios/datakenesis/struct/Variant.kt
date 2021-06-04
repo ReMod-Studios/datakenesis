@@ -1,5 +1,7 @@
 package io.github.remodstudios.datakenesis.struct
 
+import io.github.remodstudios.datakenesis.DatakenesisDslMarker
+import io.github.remodstudios.datakenesis.Identifier
 import kotlinx.serialization.Serializable
 
 @Serializable(with = VariantSerializer::class)

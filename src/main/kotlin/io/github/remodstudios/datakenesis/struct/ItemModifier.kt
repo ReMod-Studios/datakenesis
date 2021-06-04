@@ -1,5 +1,6 @@
 package io.github.remodstudios.datakenesis.struct
 
+import io.github.remodstudios.datakenesis.Identifier
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.*

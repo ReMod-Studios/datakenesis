@@ -1,5 +1,9 @@
 package io.github.remodstudios.datakenesis.struct
 
+import io.github.remodstudios.datakenesis.Builder
+import io.github.remodstudios.datakenesis.DatakenesisDslMarker
+import io.github.remodstudios.datakenesis.Identifier
+import io.github.remodstudios.datakenesis.InitFor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -21,7 +25,9 @@ class MultipartBuilder: Builder<Multipart> {
     fun case(case: MultipartCase) { cases.add(case) }
 
     inline fun case(init: InitFor<MultipartCaseBuilder>) {
-        cases.add(MultipartCaseBuilder().apply(init).build())
+        val builder = MultipartCaseBuilder()
+        builder.init()
+        cases.add(builder.build())
     }
 }
 

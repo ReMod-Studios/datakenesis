@@ -1,7 +1,5 @@
 package io.github.remodstudios.datakenesis
 
-import io.github.remodstudios.datakenesis.struct.Identifier
-import io.github.remodstudios.datakenesis.struct.InitFor
 import io.github.remodstudios.datakenesis.struct.ModelBuilder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
